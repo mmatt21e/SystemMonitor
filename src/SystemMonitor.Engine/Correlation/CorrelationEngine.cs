@@ -27,7 +27,25 @@ public sealed class CorrelationEngine : IDisposable
 
     public void Start(TimeSpan interval) => _timer = new Timer(_ => EvaluateOnce(), null, interval, interval);
 
-    public void Stop() => _timer?.Dispose();
+    public void Stop()
+    {
+        var timer = _timer;
+        if (timer is null) return;
+        _timer = null;
+        // 5s cap is a safety valve — callbacks are expected to drain in milliseconds.
+        // Intentionally do NOT dispose the ManualResetEvent: the timer infrastructure may
+        // still hold a reference to the underlying SafeWaitHandle briefly after signaling,
+        // and disposing races with that. Let the GC reclaim it.
+        var waitHandle = new ManualResetEvent(false);
+        if (timer.Dispose(waitHandle))
+        {
+            waitHandle.WaitOne(TimeSpan.FromSeconds(5));
+        }
+        else
+        {
+            waitHandle.Dispose();
+        }
+    }
 
     public void EvaluateOnce()
     {

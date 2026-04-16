@@ -35,7 +35,6 @@ public sealed class EngineHost : IDisposable
     private readonly JsonlLogger _anomaliesLog;
     private readonly Orchestrator _orchestrator;
     private readonly CorrelationEngine _correlation;
-    private volatile bool _disposed;
 
     private EngineHost(
         AppConfig config, bool isAdmin, LhmComputer? lhm,
@@ -102,7 +101,7 @@ public sealed class EngineHost : IDisposable
 
         var orchestrator = new Orchestrator(collectors, buffers, r =>
         {
-            if (host is null || host._disposed) return;
+            if (host is null) return;
             host.OnReading?.Invoke(r);
             if (r.Source == "eventlog") eventsLog.WriteReading(r);
             else readingsLog.WriteReading(r);
@@ -110,7 +109,7 @@ public sealed class EngineHost : IDisposable
 
         var correlation = new CorrelationEngine(rules, buffers, config.Thresholds, ev =>
         {
-            if (host is null || host._disposed) return;
+            if (host is null) return;
             host.OnAnomaly?.Invoke(ev);
             anomaliesLog.WriteLine(System.Text.Json.JsonSerializer.Serialize(ev));
             anomaliesLog.Flush();
@@ -138,11 +137,7 @@ public sealed class EngineHost : IDisposable
 
     public void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
         Stop();
-        // Allow any in-flight collector/correlation timer callbacks to exit before tearing down loggers.
-        Thread.Sleep(100);
         _readingsLog.Dispose();
         _eventsLog.Dispose();
         _anomaliesLog.Dispose();

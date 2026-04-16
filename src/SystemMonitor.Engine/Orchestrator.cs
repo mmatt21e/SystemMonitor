@@ -47,7 +47,23 @@ public sealed class Orchestrator : IDisposable
     public void Stop()
     {
         _running = false;
-        foreach (var t in _timers) t.Dispose();
+        var pending = new List<WaitHandle>();
+        foreach (var t in _timers)
+        {
+            var waitHandle = new ManualResetEvent(false);
+            if (t.Dispose(waitHandle))
+                pending.Add(waitHandle);
+            else
+                waitHandle.Dispose();
+        }
+        if (pending.Count > 0)
+        {
+            // 5s cap is a safety valve — callbacks are expected to drain in milliseconds.
+            // Intentionally do NOT dispose the ManualResetEvents here: the timer infrastructure
+            // may still hold a reference to the underlying SafeWaitHandle briefly after signaling,
+            // and disposing races with that. Let the GC reclaim them.
+            WaitHandle.WaitAll(pending.ToArray(), TimeSpan.FromSeconds(5));
+        }
         _timers.Clear();
     }
 
