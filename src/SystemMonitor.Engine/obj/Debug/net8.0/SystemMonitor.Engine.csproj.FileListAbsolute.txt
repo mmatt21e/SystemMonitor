@@ -1,0 +1,11 @@
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\bin\Debug\net8.0\SystemMonitor.Engine.deps.json
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\bin\Debug\net8.0\SystemMonitor.Engine.dll
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\bin\Debug\net8.0\SystemMonitor.Engine.pdb
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\obj\Debug\net8.0\SystemMonitor.Engine.GeneratedMSBuildEditorConfig.editorconfig
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\obj\Debug\net8.0\SystemMonitor.Engine.AssemblyInfoInputs.cache
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\obj\Debug\net8.0\SystemMonitor.Engine.AssemblyInfo.cs
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\obj\Debug\net8.0\SystemMonitor.Engine.csproj.CoreCompileInputs.cache
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\obj\Debug\net8.0\SystemMonitor.Engine.dll
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\obj\Debug\net8.0\refint\SystemMonitor.Engine.dll
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\obj\Debug\net8.0\SystemMonitor.Engine.pdb
+C:\Claude\CurrentProjects\SystemMonitor\src\SystemMonitor.Engine\obj\Debug\net8.0\ref\SystemMonitor.Engine.dll
