@@ -136,4 +136,42 @@ public partial class MainForm : Form
             Directory.CreateDirectory(_config.LogOutputDirectory);
         Process.Start("explorer", _config.LogOutputDirectory);
     }
+
+    private void ForceRefresh()
+    {
+        if (_host is not null) OnPumpTick(_host);
+    }
+
+    private void OpenDocsFolder()
+    {
+        var exeDir = AppContext.BaseDirectory;
+        var candidate = Path.GetFullPath(Path.Combine(exeDir, "..", "..", "..", "..", "..", "docs"));
+        if (!Directory.Exists(candidate))
+            candidate = Path.Combine(exeDir, "docs");
+        if (!Directory.Exists(candidate))
+        {
+            MessageBox.Show(
+                $"Could not locate docs folder. Checked:\n{candidate}",
+                "Documentation", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+        Process.Start("explorer", candidate);
+    }
+
+    private void ShowAboutDialog()
+    {
+        var version = typeof(MainForm).Assembly.GetName().Version?.ToString() ?? "unknown";
+        var admin = _host?.IsAdministrator ?? false;
+        MessageBox.Show(
+            $"SystemMonitor\nVersion {version}\n\n" +
+            "Windows diagnostic tool for identifying internal vs. external causes of\n" +
+            "unexplained PC failures — hardware sensors, Windows event logs, and\n" +
+            "correlation rules flag anomalies as Internal, External, or Indeterminate.\n\n" +
+            $"Running as Administrator: {(admin ? "Yes" : "No")}\n" +
+            $"Logs: {_config.LogOutputDirectory}\n\n" +
+            "See docs/superpowers/specs/ for design, docs/smoke-test-checklist.md for manual validation.",
+            "About SystemMonitor",
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Information);
+    }
 }

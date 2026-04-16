@@ -32,11 +32,31 @@ partial class MainForm
         components = new System.ComponentModel.Container();
 
         _menu = new MenuStrip();
+
         var fileMenu = new ToolStripMenuItem("File");
         fileMenu.DropDownItems.Add("Exit", null, (_, _) => Close());
+
         var viewMenu = new ToolStripMenuItem("View");
+        viewMenu.DropDownItems.Add("Refresh Now", null, (_, _) => ForceRefresh());
+        viewMenu.DropDownItems.Add(new ToolStripSeparator());
+        viewMenu.DropDownItems.Add("Clear Event Feed", null, (_, _) => _eventFeed.Rows.Clear());
+        viewMenu.DropDownItems.Add(new ToolStripSeparator());
+        for (int i = 0; i < 8; i++)
+        {
+            int tabIndex = i;
+            string[] tabNames = { "Overview", "CPU", "Memory", "Power", "Storage", "GPU", "Network", "Events" };
+            viewMenu.DropDownItems.Add(tabNames[i], null, (_, _) => _tabs.SelectedIndex = tabIndex);
+        }
+
         var toolsMenu = new ToolStripMenuItem("Tools");
+        toolsMenu.DropDownItems.Add("Configuration...", null, (_, _) => OpenConfigDialog());
+        toolsMenu.DropDownItems.Add("Open Logs Folder", null, (_, _) => OpenLogFolder());
+
         var helpMenu = new ToolStripMenuItem("Help");
+        helpMenu.DropDownItems.Add("View Documentation", null, (_, _) => OpenDocsFolder());
+        helpMenu.DropDownItems.Add(new ToolStripSeparator());
+        helpMenu.DropDownItems.Add("About SystemMonitor", null, (_, _) => ShowAboutDialog());
+
         _menu.Items.AddRange(new ToolStripItem[] { fileMenu, viewMenu, toolsMenu, helpMenu });
 
         _toolbar = new ToolStrip();
