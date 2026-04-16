@@ -22,9 +22,27 @@ public class CpuCollectorTests
     }
 
     [Fact]
-    public void Capability_IsFullOnWindows()
+    public void Capability_IsPartialWithoutLhm()
     {
         using var c = new CpuCollector(TimeSpan.FromSeconds(1));
-        c.Capability.Level.Should().Be(CapabilityLevel.Full);
+        c.Capability.Level.Should().Be(CapabilityLevel.Partial);
+    }
+
+    [Fact]
+    public void Collect_WithLhm_MayIncludeTemperatureReadings()
+    {
+        using var lhm = SystemMonitor.Engine.Collectors.Lhm.LhmComputer.Open();
+        using var c = new CpuCollector(TimeSpan.FromMilliseconds(200), lhm);
+        c.Collect();
+        Thread.Sleep(250);
+        var readings = c.Collect();
+
+        // We cannot assert presence (requires admin + supported hardware), but we assert
+        // that WHEN temp readings exist they are well-formed.
+        foreach (var r in readings.Where(r => r.Metric == "temperature_celsius"))
+        {
+            r.Unit.Should().Be("°C");
+            r.Value.Should().BeGreaterThan(-50).And.BeLessThan(150);
+        }
     }
 }
