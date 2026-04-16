@@ -6,6 +6,7 @@ using Xunit;
 
 namespace SystemMonitor.Engine.IntegrationTests.Collectors;
 
+[Collection("Lhm")]
 public class GpuCollectorTests
 {
     [Fact]

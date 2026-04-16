@@ -4,6 +4,7 @@ using Xunit;
 
 namespace SystemMonitor.Engine.IntegrationTests.Collectors;
 
+[Collection("Lhm")]
 public class LhmComputerTests
 {
     [Fact]

@@ -5,6 +5,7 @@ using Xunit;
 
 namespace SystemMonitor.Engine.IntegrationTests.Collectors;
 
+[Collection("Lhm")]
 public class CpuCollectorTests
 {
     [Fact]
