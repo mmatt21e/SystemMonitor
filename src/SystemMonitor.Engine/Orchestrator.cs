@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using SystemMonitor.Engine.Buffer;
 using SystemMonitor.Engine.Collectors;
+using Timer = System.Threading.Timer;
 
 namespace SystemMonitor.Engine;
 
