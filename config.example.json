@@ -1,0 +1,28 @@
+{
+  "LogOutputDirectory": "C:\\SystemMonitor\\Logs",
+  "LogRotationSizeBytes": 104857600,
+  "UiRefreshHz": 2,
+  "BufferCapacityPerCollector": 3600,
+  "CorrelationIntervalMs": 30000,
+  "WmiTimeoutMs": 5000,
+  "Collectors": {
+    "cpu":         { "Enabled": true, "PollingIntervalMs": 1000 },
+    "memory":      { "Enabled": true, "PollingIntervalMs": 1000 },
+    "storage":     { "Enabled": true, "PollingIntervalMs": 5000 },
+    "network":     { "Enabled": true, "PollingIntervalMs": 2000 },
+    "power":       { "Enabled": true, "PollingIntervalMs": 1000 },
+    "gpu":         { "Enabled": true, "PollingIntervalMs": 2000 },
+    "eventlog":    { "Enabled": true, "PollingIntervalMs": 10000 },
+    "reliability": { "Enabled": true, "PollingIntervalMs": 300000 },
+    "inventory":   { "Enabled": true, "PollingIntervalMs": 0 }
+  },
+  "Thresholds": {
+    "CpuTempCelsiusWarn": 80,
+    "CpuTempCelsiusCritical": 95,
+    "MemoryCommittedPercentWarn": 85,
+    "DiskLatencyMsWarn": 50,
+    "NetworkPacketLossPercentWarn": 2.0,
+    "VoltageDeviationPercentWarn": 5.0,
+    "BaselineStdDevWarn": 3.0
+  }
+}
