@@ -30,9 +30,7 @@ public sealed class AppConfig
 
     public static AppConfig Defaults()
     {
-        var defaultLogDir = Path.Combine(
-            Path.GetDirectoryName(typeof(AppConfig).Assembly.Location) ?? AppContext.BaseDirectory,
-            "Logs");
+        var defaultLogDir = Path.Combine(AppContext.BaseDirectory, "Logs");
 
         return new AppConfig
         {
