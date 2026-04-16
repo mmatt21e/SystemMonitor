@@ -15,4 +15,8 @@
     <ProjectReference Include="..\SystemMonitor.Engine\SystemMonitor.Engine.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="WinForms.DataVisualization" Version="1.10.0" />
+  </ItemGroup>
+
 </Project>
