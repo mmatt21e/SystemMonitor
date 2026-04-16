@@ -58,11 +58,16 @@ public sealed class Orchestrator : IDisposable
         }
         if (pending.Count > 0)
         {
-            // 5s cap is a safety valve — callbacks are expected to drain in milliseconds.
-            // Intentionally do NOT dispose the ManualResetEvents here: the timer infrastructure
-            // may still hold a reference to the underlying SafeWaitHandle briefly after signaling,
+            // Per-handle WaitOne is used instead of WaitHandle.WaitAll because WaitAll on
+            // multiple handles is NotSupported on STA threads — and WinForms' UI thread is STA,
+            // so Stop() may be called from the WM_CLOSE handler on the STA thread.
+            //
+            // 5s per handle is a safety valve — callbacks are expected to drain in milliseconds.
+            // Intentionally do NOT dispose the ManualResetEvents: the timer infrastructure may
+            // still hold a reference to the underlying SafeWaitHandle briefly after signaling,
             // and disposing races with that. Let the GC reclaim them.
-            WaitHandle.WaitAll(pending.ToArray(), TimeSpan.FromSeconds(5));
+            foreach (var h in pending)
+                h.WaitOne(TimeSpan.FromSeconds(5));
         }
         _timers.Clear();
     }
