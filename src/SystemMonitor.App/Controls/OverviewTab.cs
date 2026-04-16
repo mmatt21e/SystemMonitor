@@ -47,7 +47,7 @@ internal sealed class SubsystemCard : UserControl
         _bufferKey = bufferKey; _metric = metric; _unit = unit;
         _title = new Label { Text = title, Font = new Font("Segoe UI", 11, FontStyle.Bold), Dock = DockStyle.Top, Height = 24 };
         _value = new Label { Text = "—", Font = new Font("Segoe UI", 20), Dock = DockStyle.Top, Height = 40 };
-        _sparkline = new Chart { Dock = DockStyle.Fill };
+        _sparkline = new Chart { Dock = DockStyle.Fill, MinimumSize = new Size(50, 50) };
         var area = new ChartArea("main");
         area.AxisX.Enabled = AxisEnabled.False;
         area.AxisY.Enabled = AxisEnabled.False;

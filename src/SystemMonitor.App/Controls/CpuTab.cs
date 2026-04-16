@@ -47,7 +47,7 @@ public sealed class CpuTab : UserControl, ITabView
 
     internal static Chart BuildChart(string title, params string[] seriesNames)
     {
-        var chart = new Chart { Dock = DockStyle.Fill };
+        var chart = new Chart { Dock = DockStyle.Fill, MinimumSize = new Size(50, 50) };
         var area = new ChartArea("main");
         area.AxisX.LabelStyle.Format = "HH:mm:ss";
         chart.ChartAreas.Add(area);
