@@ -169,7 +169,7 @@ public partial class MainForm : Form
             "correlation rules flag anomalies as Internal, External, or Indeterminate.\n\n" +
             $"Running as Administrator: {(admin ? "Yes" : "No")}\n" +
             $"Logs: {_config.LogOutputDirectory}\n\n" +
-            "See docs/superpowers/specs/ for design, docs/smoke-test-checklist.md for manual validation.",
+            "See docs/design/ for design, docs/smoke-test-checklist.md for manual validation.",
             "About SystemMonitor",
             MessageBoxButtons.OK,
             MessageBoxIcon.Information);

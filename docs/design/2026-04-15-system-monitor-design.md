@@ -2,7 +2,6 @@
 
 **Date:** 2026-04-15
 **Status:** Approved
-**Project path:** `C:\Claude\CurrentProjects\SystemMonitor`
 
 ---
 

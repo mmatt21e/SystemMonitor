@@ -42,7 +42,7 @@ locked-down machines.
 
 ## Architecture
 
-See `docs/superpowers/specs/2026-04-15-system-monitor-design.md`.
+See `docs/design/2026-04-15-system-monitor-design.md`.
 
 ## Manual Release Validation
 

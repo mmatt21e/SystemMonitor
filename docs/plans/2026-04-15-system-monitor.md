@@ -1,14 +1,12 @@
 # System Monitor Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Build a deployable Windows diagnostic tool (C# / .NET 8 / WinForms) that captures hardware sensors, Windows event logs, and system state, then classifies anomalies as Internal (hardware-originated), External (power/thermal/network environment), or Indeterminate.
 
 **Architecture:** Three projects — `SystemMonitor.Engine` (UI-agnostic class library holding config, collectors, ring buffer, correlation engine, logger), `SystemMonitor.App` (WinForms executable — thin UI shell), and two test projects. The app supports both admin and standard-user modes via runtime capability detection, and supports both an interactive UI and a `--headless` mode for unattended long runs.
 
 **Tech Stack:** .NET 8, C#, WinForms, LibreHardwareMonitorLib (hardware sensors), System.Diagnostics.PerformanceCounter, System.Management (WMI), System.Diagnostics.Eventing.Reader (Event Log), System.Windows.Forms.DataVisualization.Charting, xUnit + FluentAssertions + Moq.
 
-**Related spec:** `docs/superpowers/specs/2026-04-15-system-monitor-design.md`
+**Related spec:** `docs/design/2026-04-15-system-monitor-design.md`
 
 ---
 
@@ -83,9 +81,8 @@ SystemMonitor/
 │       └── SystemMonitor.Engine.IntegrationTests.csproj
 ├── config.example.json
 └── docs/
-    ├── superpowers/
-    │   ├── specs/2026-04-15-system-monitor-design.md
-    │   └── plans/2026-04-15-system-monitor.md
+    ├── design/2026-04-15-system-monitor-design.md
+    ├── plans/2026-04-15-system-monitor.md
     └── smoke-test-checklist.md
 ```
 
@@ -392,7 +389,7 @@ Create `README.md`:
 
 Windows diagnostic tool for PCs experiencing unexplained failures.
 
-See `docs/superpowers/specs/2026-04-15-system-monitor-design.md` for the design.
+See `docs/design/2026-04-15-system-monitor-design.md` for the design.
 
 ## Build
 
@@ -5496,7 +5493,7 @@ locked-down machines.
 
 ## Architecture
 
-See `docs/superpowers/specs/2026-04-15-system-monitor-design.md`.
+See `docs/design/2026-04-15-system-monitor-design.md`.
 
 ## Manual Release Validation
 
@@ -5535,16 +5532,4 @@ Known follow-up items (not blocking):
 1. `diagnostics.log` channel for internal tool errors.
 2. Graceful disk-full handling in `JsonlLogger`.
 3. SMART attribute reading (requires admin + additional WMI plumbing) — currently left as a documented partial capability.
-
----
-
-## Execution Handoff
-
-Plan complete and saved to `docs/superpowers/plans/2026-04-15-system-monitor.md`. Two execution options:
-
-**1. Subagent-Driven (recommended)** — fresh subagent per task, review between tasks, fast iteration. Uses `superpowers:subagent-driven-development`.
-
-**2. Inline Execution** — execute tasks in this session using `superpowers:executing-plans`, batch execution with checkpoints for review.
-
-Which approach would you like?
 
