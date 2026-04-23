@@ -4,6 +4,14 @@
     <OutputType>Package</OutputType>
     <OutputName>SystemMonitor</OutputName>
     <InstallerPlatform>x64</InstallerPlatform>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- util:ServiceConfig (restart-on-failure policy) lives in the Util extension. -->
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
+  </ItemGroup>
+
+  <PropertyGroup>
     <DefineConstants>
       StagingDir=$(MSBuildThisFileDirectory)..\..\artifacts\publish\;
       RepoRoot=$(MSBuildThisFileDirectory)..\..\
@@ -12,12 +20,14 @@
     <SuppressIces>ICE61</SuppressIces>
   </PropertyGroup>
 
-  <!-- Publish SystemMonitor.App as a self-contained single-file exe into a staging
-       directory before we run heat/light. Keeps the MSI project decoupled from
-       whatever the app's output layout happens to be. -->
+  <!-- Publish both SystemMonitor.App (probe mode exe) and SystemMonitor.Service
+       (Windows Service exe) as self-contained single-file binaries into the
+       staging directory before heat/light runs. Keeps the MSI project decoupled
+       from each output project's layout quirks. -->
   <Target Name="PublishAppForPackaging" BeforeTargets="BeforeBuild">
     <MakeDir Directories="$(MSBuildThisFileDirectory)..\..\artifacts\publish" />
     <Exec Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\..\src\SystemMonitor.App\SystemMonitor.App.csproj&quot; -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o &quot;$(MSBuildThisFileDirectory)..\..\artifacts\publish&quot;" />
+    <Exec Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\..\src\SystemMonitor.Service\SystemMonitor.Service.csproj&quot; -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o &quot;$(MSBuildThisFileDirectory)..\..\artifacts\publish&quot;" />
   </Target>
 
 </Project>

@@ -16,7 +16,7 @@ namespace SystemMonitor.Engine;
 /// for the UI (buffers, anomaly stream, capability report) and can be used in headless mode too.
 /// </summary>
 [SupportedOSPlatform("windows")]
-public sealed class EngineHost : IDisposable
+public sealed class EngineHost : IEngineLifetime, IDisposable
 {
     public AppConfig Config { get; }
     public bool IsAdministrator { get; }

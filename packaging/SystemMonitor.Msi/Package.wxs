@@ -16,13 +16,12 @@
     * MajorUpgrade is AllowSameVersionUpgrades=no so the build fails fast on
       a version-bump oversight.
 
-  Intentionally NOT in this scaffolding:
-    * Service install (Phase 1.3 — wires in a ServiceInstall/ServiceControl
-      pair once SystemMonitor.Service exists).
+  Intentionally NOT in this package:
     * Custom action for writing a default config (handled by the app itself).
     * ADMX policy template (Phase 2).
 -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
   <Package
       Name="SystemMonitor"
@@ -38,6 +37,11 @@
         DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
     <MediaTemplate EmbedCab="yes" />
+
+    <!-- INSTALLSERVICE=1 installs and starts SystemMonitor.Service as a
+         LocalSystem service with delayed start. Default (0) leaves the
+         service component unselected so the install is probe-mode only. -->
+    <Property Id="INSTALLSERVICE" Value="0" Secure="yes" />
 
     <!-- Per-machine install root. -->
     <StandardDirectory Id="ProgramFiles64Folder">
@@ -67,6 +71,45 @@
 
     </ComponentGroup>
 
+    <!-- Optional Windows Service component. Only installed when INSTALLSERVICE=1
+         via the Feature's conditional Level switch below. The service exe is
+         always laid down on disk; the ServiceInstall/ServiceControl entries
+         are the opt-in part. -->
+    <ComponentGroup Id="ServiceComponents" Directory="INSTALLFOLDER">
+
+      <Component Id="ServiceExe" Guid="B1E4D6F8-7A2C-4E5B-9D3F-6C8A1B4E2D7A">
+        <File Id="SystemMonitorServiceExe"
+              Source="$(StagingDir)SystemMonitor.Service.exe"
+              KeyPath="yes" />
+
+        <ServiceInstall Id="SystemMonitorService"
+                        Name="SystemMonitor"
+                        DisplayName="SystemMonitor Diagnostic Agent"
+                        Description="Collects hardware sensors, Windows events, and reliability data; classifies anomalies as Internal, External, or Indeterminate."
+                        Type="ownProcess"
+                        Start="auto"
+                        ErrorControl="normal"
+                        Account="LocalSystem"
+                        Vital="yes">
+          <!-- SCM-managed restart policy: wait 60s, 120s, 300s between retries;
+               reset failure counter after 24 hours of stable operation. -->
+          <util:ServiceConfig FirstFailureActionType="restart"
+                              SecondFailureActionType="restart"
+                              ThirdFailureActionType="restart"
+                              RestartServiceDelayInSeconds="60"
+                              ResetPeriodInDays="1" />
+        </ServiceInstall>
+
+        <ServiceControl Id="SystemMonitorServiceControl"
+                        Name="SystemMonitor"
+                        Start="install"
+                        Stop="both"
+                        Remove="uninstall"
+                        Wait="yes" />
+      </Component>
+
+    </ComponentGroup>
+
     <!-- Start menu shortcuts + per-user registry hive markers needed so
          Windows tracks shortcut removal across upgrades. -->
     <ComponentGroup Id="StartMenuShortcuts" Directory="ApplicationProgramsFolder">
@@ -92,6 +135,20 @@
       <ComponentGroupRef Id="ProductComponents" />
       <ComponentGroupRef Id="StartMenuShortcuts" />
     </Feature>
+
+    <!-- Level="2" keeps Service off by default; INSTALLSERVICE=1 drops it to
+         Level="1" (installed). Matches the plan: probe mode always, service
+         mode opt-in. -->
+    <Feature Id="Service" Title="Windows Service" Level="2" AllowAbsent="yes">
+      <ComponentGroupRef Id="ServiceComponents" />
+    </Feature>
+    <SetProperty Id="ServiceFeatureLevel"
+                 Value="1"
+                 After="CostFinalize"
+                 Sequence="both"
+                 Action="SetServiceFeatureLevel"
+                 Condition="INSTALLSERVICE=&quot;1&quot;" />
+    <Property Id="ServiceFeatureLevel" Value="2" />
 
   </Package>
 </Wix>

@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\SystemMonitor.Engine\SystemMonitor.Engine.csproj" />
+    <ProjectReference Include="..\..\src\SystemMonitor.Service\SystemMonitor.Service.csproj" />
   </ItemGroup>
 
 </Project>
