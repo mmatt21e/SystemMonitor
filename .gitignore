@@ -480,3 +480,14 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# The global *.msi / *.msix / *.msm / *.msp rules above accidentally match the
+# packaging/SystemMonitor.Msi/ directory name -- never drop source files under
+# packaging/ out of source control, even when they live in a dir ending in .msi.
+!packaging/**/*.wixproj
+!packaging/**/*.wxs
+!packaging/**/*.wxi
+!packaging/**/*.wxl
+!packaging/**/*.ps1
+!packaging/**/*.md
+!packaging/SystemMonitor.Msi/

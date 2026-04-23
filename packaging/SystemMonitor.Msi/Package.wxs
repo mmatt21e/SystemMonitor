@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SystemMonitor MSI installer.
+
+  Design choices — these are deliberate; change with care:
+    * Per-machine install under %ProgramFiles%\SystemMonitor (64-bit). Rules out
+      per-user install by design: SystemMonitor needs to run before any user
+      logs on when installed as a service.
+    * Log directory is %ProgramData%\SystemMonitor\Logs (outside the install
+      tree). Uninstall never touches it — logs are forensic evidence.
+    * No config.json ships in the MSI. The app falls back to sensible defaults
+      when it's absent. That keeps upgrades from overwriting a user's config.
+      A config.example.json is laid down as reference material only.
+    * UpgradeCode is stable — keep it forever. Regenerating it breaks in-place
+      upgrades for every existing installation.
+    * MajorUpgrade is AllowSameVersionUpgrades=no so the build fails fast on
+      a version-bump oversight.
+
+  Intentionally NOT in this scaffolding:
+    * Service install (Phase 1.3 — wires in a ServiceInstall/ServiceControl
+      pair once SystemMonitor.Service exists).
+    * Custom action for writing a default config (handled by the app itself).
+    * ADMX policy template (Phase 2).
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Package
+      Name="SystemMonitor"
+      Manufacturer="mmatt21e"
+      Version="0.1.0"
+      UpgradeCode="A4E62C9B-0C6F-4A5F-8A1B-7F4C3F1D1E2A"
+      Scope="perMachine"
+      InstallerVersion="500"
+      Compressed="yes">
+
+    <MajorUpgrade
+        AllowSameVersionUpgrades="no"
+        DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Per-machine install root. -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="SystemMonitor" />
+    </StandardDirectory>
+
+    <!-- Start menu shortcut folder. -->
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="SystemMonitor" />
+    </StandardDirectory>
+
+    <!-- Files installed under INSTALLFOLDER. -->
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+
+      <Component Id="MainExe" Guid="C8D3E5A7-9B2F-4C1D-B7E6-2D8A4F1C5E3B">
+        <File Id="SystemMonitorAppExe"
+              Source="$(StagingDir)SystemMonitor.App.exe"
+              KeyPath="yes" />
+      </Component>
+
+      <Component Id="ConfigExample" Guid="E2F5A1B9-3D4C-4F6E-9A8B-1C7D2E5F3A4B">
+        <File Id="ConfigExampleJson"
+              Source="$(var.RepoRoot)config.example.json"
+              Name="config.example.json"
+              KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Start menu shortcuts + per-user registry hive markers needed so
+         Windows tracks shortcut removal across upgrades. -->
+    <ComponentGroup Id="StartMenuShortcuts" Directory="ApplicationProgramsFolder">
+      <Component Id="AppShortcut" Guid="1F8A9B3D-5E2C-4F7A-B6D1-3E8C5A2F7D9B">
+        <Shortcut Id="SystemMonitorShortcut"
+                  Name="SystemMonitor"
+                  Description="SystemMonitor diagnostic tool"
+                  Target="[INSTALLFOLDER]SystemMonitor.App.exe"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder"
+                      Directory="ApplicationProgramsFolder"
+                      On="uninstall" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\mmatt21e\SystemMonitor"
+                       Name="installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <Feature Id="Main" Title="SystemMonitor" Level="1" AllowAbsent="no">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="StartMenuShortcuts" />
+    </Feature>
+
+  </Package>
+</Wix>
