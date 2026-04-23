@@ -1,6 +1,7 @@
 using System.Management;
 using System.Runtime.Versioning;
 using SystemMonitor.Engine.Capabilities;
+using SystemMonitor.Engine.Diagnostics;
 
 namespace SystemMonitor.Engine.Collectors;
 
@@ -49,20 +50,35 @@ public sealed class ReliabilityCollector : CollectorBase
         }
         catch { /* missing class on older systems, insufficient privilege, etc. */ }
 
-        // Minidump directory inventory.
+        // Minidump directory inventory, enriched with BugCheck analysis when we can
+        // parse the DUMP_HEADER64. A kernel dump without bugcheck fields is still
+        // reported — just without the diagnostic labels.
         var minidumpDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Minidump");
         if (Directory.Exists(minidumpDir))
         {
             foreach (var f in Directory.EnumerateFiles(minidumpDir, "*.dmp"))
             {
                 var fi = new FileInfo(f);
+                var labels = new Dictionary<string, string>
+                {
+                    ["path"] = f,
+                    ["filename"] = fi.Name
+                };
+
+                var info = MinidumpReader.TryRead(f);
+                if (info is not null)
+                {
+                    labels["bugcheck_code"] = $"0x{info.BugCheckCode:X8}";
+                    labels["bugcheck_name"] = info.BugCheckName;
+                    labels["bugcheck_p1"] = $"0x{info.BugCheckParameter1:X16}";
+                    labels["bugcheck_p2"] = $"0x{info.BugCheckParameter2:X16}";
+                    labels["bugcheck_p3"] = $"0x{info.BugCheckParameter3:X16}";
+                    labels["bugcheck_p4"] = $"0x{info.BugCheckParameter4:X16}";
+                }
+
                 results.Add(new Reading("reliability", "minidump", fi.Length, "bytes",
                     new DateTimeOffset(fi.CreationTimeUtc, TimeSpan.Zero), ReadingConfidence.High,
-                    new Dictionary<string, string>
-                    {
-                        ["path"] = f,
-                        ["filename"] = fi.Name
-                    }));
+                    labels));
             }
         }
 
