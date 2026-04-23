@@ -7,6 +7,7 @@ using SystemMonitor.Engine.Config;
 using SystemMonitor.Engine.Correlation;
 using SystemMonitor.Engine.Correlation.Rules;
 using SystemMonitor.Engine.Logging;
+using SystemMonitor.Engine.Privacy;
 
 namespace SystemMonitor.Engine;
 
@@ -20,6 +21,7 @@ public sealed class EngineHost : IDisposable
     public AppConfig Config { get; }
     public bool IsAdministrator { get; }
     public LhmComputer? Lhm { get; }
+    public PiiRedactor Redactor { get; }
     public IReadOnlyDictionary<string, ReadingRingBuffer> Buffers => _buffers;
     public IReadOnlyList<ICollector> Collectors => _collectors;
     public event Action<Reading>? OnReading;
@@ -37,7 +39,7 @@ public sealed class EngineHost : IDisposable
     private readonly CorrelationEngine _correlation;
 
     private EngineHost(
-        AppConfig config, bool isAdmin, LhmComputer? lhm,
+        AppConfig config, bool isAdmin, LhmComputer? lhm, PiiRedactor redactor,
         Dictionary<string, ReadingRingBuffer> buffers, List<ICollector> collectors,
         JsonlLogger readingsLog, JsonlLogger eventsLog, JsonlLogger anomaliesLog,
         Orchestrator orchestrator, CorrelationEngine correlation)
@@ -45,6 +47,7 @@ public sealed class EngineHost : IDisposable
         Config = config;
         IsAdministrator = isAdmin;
         Lhm = lhm;
+        Redactor = redactor;
         _buffers = buffers;
         _collectors = collectors;
         _readingsLog = readingsLog;
@@ -65,6 +68,13 @@ public sealed class EngineHost : IDisposable
             catch { lhm = null; }
         }
 
+        var redactor = new PiiRedactor(config.Privacy.Mode);
+        var sanitizer = new ReadingSanitizer(redactor);
+
+        // Retention sweep runs before the loggers open today's files, so if a retention
+        // change is applied, expired files are cleaned up before we write anything new.
+        RetentionSweeper.Sweep(config.LogOutputDirectory, config.LogRetentionDays);
+
         var collectors = new List<ICollector>();
         if (Enabled(config, "cpu"))         collectors.Add(new CpuCollector(Ms(config, "cpu"), lhm));
         if (Enabled(config, "memory"))      collectors.Add(new MemoryCollector(Ms(config, "memory")));
@@ -83,9 +93,9 @@ public sealed class EngineHost : IDisposable
         var eventsLog = new JsonlLogger(config.LogOutputDirectory, "events", config.LogRotationSizeBytes);
         var anomaliesLog = new JsonlLogger(config.LogOutputDirectory, "anomalies", config.LogRotationSizeBytes);
 
-        WriteCapabilityHeader(readingsLog, isAdmin, collectors);
-        WriteCapabilityHeader(eventsLog, isAdmin, collectors);
-        WriteCapabilityHeader(anomaliesLog, isAdmin, collectors);
+        WriteCapabilityHeader(readingsLog, isAdmin, collectors, redactor);
+        WriteCapabilityHeader(eventsLog, isAdmin, collectors, redactor);
+        WriteCapabilityHeader(anomaliesLog, isAdmin, collectors, redactor);
 
         var rules = new List<ICorrelationRule>
         {
@@ -105,7 +115,7 @@ public sealed class EngineHost : IDisposable
             host.OnReading?.Invoke(r);
             if (r.Source == "eventlog") eventsLog.WriteReading(r);
             else readingsLog.WriteReading(r);
-        });
+        }, sanitizer.Sanitize);
 
         var correlation = new CorrelationEngine(rules, buffers, config.Thresholds, ev =>
         {
@@ -115,7 +125,7 @@ public sealed class EngineHost : IDisposable
             anomaliesLog.Flush();
         });
 
-        host = new EngineHost(config, isAdmin, lhm, buffers, collectors, readingsLog, eventsLog, anomaliesLog,
+        host = new EngineHost(config, isAdmin, lhm, redactor, buffers, collectors, readingsLog, eventsLog, anomaliesLog,
                               orchestrator, correlation);
         return host;
     }
@@ -151,14 +161,22 @@ public sealed class EngineHost : IDisposable
     private static TimeSpan Ms(AppConfig c, string name)
         => TimeSpan.FromMilliseconds(c.Collectors[name].PollingIntervalMs);
 
-    private static void WriteCapabilityHeader(JsonlLogger log, bool isAdmin, IEnumerable<ICollector> collectors)
+    private static void WriteCapabilityHeader(
+        JsonlLogger log, bool isAdmin, IEnumerable<ICollector> collectors, PiiRedactor redactor)
     {
+        // In any non-Full privacy mode the machine name must not land in the header verbatim.
+        var machineLabel = redactor.Mode == PrivacyMode.Full
+            ? Environment.MachineName
+            : redactor.RedactHostname(Environment.MachineName);
+
         var header = new
         {
             type = "capability_report",
             timestamp = DateTimeOffset.UtcNow,
             is_administrator = isAdmin,
-            machine = Environment.MachineName,
+            machine = machineLabel,
+            privacy_mode = redactor.Mode.ToString(),
+            privacy_salt_fingerprint = redactor.SaltFingerprint,
             collectors = collectors.Select(c => new
             {
                 name = c.Name,

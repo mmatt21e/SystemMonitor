@@ -51,12 +51,16 @@ public static class ConfigLoader
         if (user.BufferCapacityPerCollector > 0) defaults.BufferCapacityPerCollector = user.BufferCapacityPerCollector;
         if (user.CorrelationIntervalMs > 0) defaults.CorrelationIntervalMs = user.CorrelationIntervalMs;
         if (user.WmiTimeoutMs > 0) defaults.WmiTimeoutMs = user.WmiTimeoutMs;
+        if (user.LogRetentionDays > 0) defaults.LogRetentionDays = user.LogRetentionDays;
 
         foreach (var kv in user.Collectors)
             defaults.Collectors[kv.Key] = kv.Value;
 
         if (user.Thresholds is not null)
             defaults.Thresholds = user.Thresholds;
+
+        if (user.Privacy is not null)
+            defaults.Privacy = user.Privacy;
 
         return defaults;
     }

@@ -38,4 +38,35 @@ public class OrchestratorTests
         buffers["fake"].Count.Should().BeGreaterThan(2);
         sink.Count.Should().BeGreaterThan(2);
     }
+
+    private sealed class LabelCollector : CollectorBase
+    {
+        public LabelCollector() : base("labelled", TimeSpan.FromMilliseconds(50)) { }
+        public override CapabilityStatus Capability => CapabilityStatus.Full();
+        protected override IEnumerable<Reading> CollectCore() =>
+            new[] { new Reading("labelled", "m", 1, "x", DateTimeOffset.UtcNow,
+                ReadingConfidence.High,
+                new Dictionary<string, string> { ["hostname"] = "SECRET-HOST" }) };
+    }
+
+    [Fact]
+    public async Task Transform_IsAppliedBeforeBufferAndSink()
+    {
+        var fake = new LabelCollector();
+        var buffers = new Dictionary<string, ReadingRingBuffer> { ["labelled"] = new ReadingRingBuffer(100) };
+        var sink = new List<Reading>();
+
+        Reading Transform(Reading r) => r with
+        {
+            Labels = r.Labels.ToDictionary(kv => kv.Key, kv => kv.Key == "hostname" ? "<redacted>" : kv.Value)
+        };
+
+        using var o = new Orchestrator(new[] { fake }, buffers, sink.Add, Transform);
+        o.Start();
+        await Task.Delay(150);
+        o.Stop();
+
+        sink.Should().OnlyContain(r => r.Labels["hostname"] == "<redacted>");
+        buffers["labelled"].Snapshot().Should().OnlyContain(r => r.Labels["hostname"] == "<redacted>");
+    }
 }

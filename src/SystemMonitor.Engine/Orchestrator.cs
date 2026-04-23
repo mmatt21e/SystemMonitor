@@ -14,17 +14,20 @@ public sealed class Orchestrator : IDisposable
     private readonly IReadOnlyList<ICollector> _collectors;
     private readonly IReadOnlyDictionary<string, ReadingRingBuffer> _buffers;
     private readonly Action<Reading> _sink;
+    private readonly Func<Reading, Reading>? _transform;
     private readonly List<Timer> _timers = new();
     private volatile bool _running;
 
     public Orchestrator(
         IEnumerable<ICollector> collectors,
         IReadOnlyDictionary<string, ReadingRingBuffer> buffers,
-        Action<Reading> sink)
+        Action<Reading> sink,
+        Func<Reading, Reading>? transform = null)
     {
         _collectors = collectors.ToList();
         _buffers = buffers;
         _sink = sink;
+        _transform = transform;
     }
 
     public void Start()
@@ -77,8 +80,9 @@ public sealed class Orchestrator : IDisposable
         if (!_running) return;
         var readings = c.Collect();
         if (!_buffers.TryGetValue(c.Name, out var buf)) return;
-        foreach (var r in readings)
+        foreach (var raw in readings)
         {
+            var r = _transform is null ? raw : _transform(raw);
             buf.Add(r);
             _sink(r);
         }

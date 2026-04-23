@@ -28,6 +28,12 @@ public sealed class AppConfig
     [Description("Anomaly thresholds used by the correlation engine.")]
     public ThresholdConfig Thresholds { get; set; } = new();
 
+    [Description("PII handling for log output. Defaults to Full (no redaction) to preserve forensic fidelity.")]
+    public PrivacyConfig Privacy { get; set; } = new();
+
+    [Description("Delete reading/event/anomaly log files older than this many days on startup and after rotation. 0 = retain forever (default — never silently delete forensic data).")]
+    public int LogRetentionDays { get; set; } = 0;
+
     public static AppConfig Defaults()
     {
         var defaultLogDir = Path.Combine(AppContext.BaseDirectory, "Logs");
