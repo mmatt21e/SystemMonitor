@@ -40,6 +40,12 @@ locked-down machines.
 | `--headless`      | Run without UI. |
 | `--help`, `-h`    | Show usage. |
 
+### Install from MSI (enterprise)
+
+    msiexec /i SystemMonitor.msi /quiet /log install.log
+
+See `packaging/README.md` for building and signing the MSI.
+
 ## Architecture
 
 See `docs/design/2026-04-15-system-monitor-design.md`.
