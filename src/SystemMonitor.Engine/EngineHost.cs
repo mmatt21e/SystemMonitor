@@ -101,6 +101,7 @@ public sealed class EngineHost : IEngineLifetime, IDisposable
         {
             new ThermalRunawayRule(),
             new PowerAndKernelPowerRule(),
+            new MinidumpAndPowerRule(),
             new DiskLatencyAndSmartRule(),
             new NetworkDropAndPacketLossRule(),
             new BaselineDeviationRule("cpu", "temperature_celsius"),
